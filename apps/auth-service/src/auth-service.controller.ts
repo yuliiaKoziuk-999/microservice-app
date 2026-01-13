@@ -1,10 +1,10 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { AuthService } from './auth-service.service';
-import { ApiTags, ApiOperation, ApiBody } from '@nestjs/swagger'; // Додай декоратори
+import { ApiTags, ApiOperation, ApiBody } from '@nestjs/swagger';
 import { RegisterDto } from '@app/common/dto/register.dto';
 
-@ApiTags('auth') // Тепер усі методи будуть тут
-@Controller('auth') // Рекомендую додати префікс 'auth' для чіткості
+@ApiTags('auth')
+@Controller('auth')
 export class AuthServiceController {
   constructor(private readonly authService: AuthService) {}
 

@@ -1,7 +1,7 @@
 import { KAFKA_SERVICE, KAFKA_TOPICS } from '@app/kafka';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
-import { lastValueFrom } from 'rxjs'; // Додайте цей імпорт
+import { lastValueFrom } from 'rxjs';
 
 @Injectable()
 export class AuthService implements OnModuleInit {
@@ -10,7 +10,6 @@ export class AuthService implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    // Реєструємо відповідь для топіків, якщо це необхідно (subscribeToResponseOf)
     await this.kafkaClient.connect();
   }
 
@@ -19,12 +18,10 @@ export class AuthService implements OnModuleInit {
   }
 
   async simulateUserRegistration(email: string) {
-    // Використовуємо lastValueFrom, щоб перетворити Observable у Promise
-    // Тепер await працюватиме коректно
     await lastValueFrom(
       this.kafkaClient.emit(KAFKA_TOPICS.USER_REGISTERED, {
         email,
-        timestamp: new Date().toISOString(), // Викликаємо функцію додаючи ()
+        timestamp: new Date().toISOString(),
       }),
     );
 

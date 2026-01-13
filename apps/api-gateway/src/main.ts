@@ -5,7 +5,6 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Конфігурація Swagger
   const config = new DocumentBuilder()
     .setTitle('EventFlow API')
     .setDescription('The API description for EventFlow microservices')
@@ -16,9 +15,8 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, config);
 
-  // Шлях, за яким буде доступна документація (наприклад, http://localhost:3000/api)
   SwaggerModule.setup('api', app, document);
 
   await app.listen(3000);
 }
-bootstrap();
+void bootstrap();

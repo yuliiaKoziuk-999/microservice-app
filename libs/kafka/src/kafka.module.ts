@@ -1,4 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-expressions
 // KAFKA_CONSUMER_GROUP;
 import { DynamicModule, Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
@@ -22,14 +21,12 @@ export class KafkaModule {
                 brokers: [KAFKA_BROKER],
               },
               consumer: {
-                // Використовуємо передану групу або дефолтну
                 groupId: consumerGroup ?? `${KAFKA_CLIENT_ID}-group`,
               },
             },
           },
         ]),
       ],
-      // Обов'язково додаємо в exports, щоб інші модулі бачили цей сервіс
       exports: [ClientsModule],
     };
   }

@@ -1,9 +1,7 @@
 import { pgTable, uuid, varchar, timestamp, pgEnum } from 'drizzle-orm/pg-core';
 
-// Enum для ролей користувачів
 export const roleEnum = pgEnum('role', ['USER', 'ORGANIZER', 'ADMIN']);
 
-// Таблиця користувачів
 export const users = pgTable('users', {
   id: uuid('id').defaultRandom().primaryKey(),
   email: varchar('email', { length: 255 }).notNull().unique(),
