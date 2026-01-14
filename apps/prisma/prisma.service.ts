@@ -11,15 +11,10 @@ export class PrismaService
   constructor() {
     const dbUrl = process.env.DATABASE_URL;
 
-    if (!dbUrl) {
-      console.error('DATABASE_URL is undefined');
-    }
-
     const pool = new Pool({
       connectionString: dbUrl,
     });
     const adapter = new PrismaPg(pool);
-    console.log(adapter);
 
     super({ adapter });
   }
