@@ -1,23 +1,24 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { AuthService } from './auth-service.service';
-import { ApiTags, ApiOperation, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiBody } from '@nestjs/swagger';
 import { RegisterDto } from '@app/common/dto/register.dto';
+import { SignInDto } from './dto/signIn.dto';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthServiceController {
   constructor(private readonly authService: AuthService) {}
 
-  @Get()
-  @ApiOperation({ summary: 'Привітання' })
-  getHello(): string {
-    return this.authService.getHello();
+  @Post('register')
+  @ApiBody({ type: RegisterDto })
+  register(@Body() body: RegisterDto) {
+    return this.authService.registerUser(body);
   }
 
-  @Post('register')
-  @ApiOperation({ summary: 'Реєстрація користувача' })
-  @ApiBody({ type: RegisterDto })
-  register(@Body() body: { email: string }) {
-    return this.authService.simulateUserRegistration(body.email);
+  @HttpCode(HttpStatus.OK)
+  @Post('login')
+  @ApiBody({ type: SignInDto })
+  signIn(@Body() signInDto: Record<string, any>) {
+    return this.authService.signIn(signInDto.email, signInDto.password);
   }
 }
