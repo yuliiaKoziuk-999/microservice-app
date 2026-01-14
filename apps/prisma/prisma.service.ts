@@ -19,6 +19,7 @@ export class PrismaService
       connectionString: dbUrl,
     });
     const adapter = new PrismaPg(pool);
+    console.log(adapter);
 
     super({ adapter });
   }
