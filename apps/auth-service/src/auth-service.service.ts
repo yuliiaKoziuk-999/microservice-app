@@ -6,6 +6,7 @@ import {
   OnModuleInit,
   UnauthorizedException,
 } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { ClientKafka } from '@nestjs/microservices';
 import { PrismaService } from 'apps/prisma/prisma.service';
 import { UsersService } from 'apps/users/src/users.service';
@@ -17,6 +18,7 @@ export class AuthService implements OnModuleInit {
     @Inject(KAFKA_SERVICE) private readonly kafkaClient: ClientKafka,
     private readonly usersService: UsersService,
     private readonly prisma: PrismaService,
+    private jwtService: JwtService,
   ) {}
 
   async onModuleInit() {
@@ -34,7 +36,12 @@ export class AuthService implements OnModuleInit {
     return { message: `User registered: ${email}` };
   }
 
-  async registerUser(data: { name: string; email: string; password?: string }) {
+  async registerUser(data: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    password?: string;
+  }) {
     const existingUser = await this.prisma.user.findUnique({
       where: { email: data.email },
     });
@@ -47,7 +54,8 @@ export class AuthService implements OnModuleInit {
       data: {
         email: data.email,
         password: data.password || 'temporary_password',
-        name: data.name || 'Anonymous',
+        firstName: data.firstName || 'Anonymous',
+        lastName: data.lastName || 'Anonymous',
       },
     });
 
@@ -55,6 +63,8 @@ export class AuthService implements OnModuleInit {
       this.kafkaClient.emit(KAFKA_TOPICS.USER_REGISTERED, {
         userId: newUser.id,
         email: newUser.email,
+        firsName: newUser.firstName,
+        lastName: newUser.lastName,
         timestamp: new Date().toISOString(),
       }),
     );
@@ -67,10 +77,9 @@ export class AuthService implements OnModuleInit {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, ...result } = user;
-    // TODO: Generate a JWT and return it here
-    // instead of the user object
-    return result;
+    const payload = { sub: user.id, email: user.email };
+    return {
+      access_token: await this.jwtService.signAsync(payload),
+    };
   }
 }

@@ -27,5 +27,8 @@ export class RegisterDto {
   })
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   @IsString()
-  name: string;
+  firstName: string;
+
+  @IsString()
+  lastName: string;
 }

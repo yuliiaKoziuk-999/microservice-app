@@ -10,7 +10,11 @@ async function bootstrap() {
     .setDescription('The API description for EventFlow microservices')
     .setVersion('1.0')
     .addTag('auth')
-    .addBearerAuth()
+    .addBearerAuth(
+      { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+      'access-token',
+    )
+    .addSecurityRequirements('access-token')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
