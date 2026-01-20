@@ -11,6 +11,7 @@ import { ClientKafka } from '@nestjs/microservices';
 import { PrismaService } from 'apps/prisma/prisma.service';
 import { UsersService } from 'apps/users/src/users.service';
 import { lastValueFrom } from 'rxjs';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService implements OnModuleInit {
@@ -50,12 +51,17 @@ export class AuthService implements OnModuleInit {
       throw new ConflictException('User with this email already exists');
     }
 
+    const salt = await bcrypt.genSalt(10);
+
+    const passwordToHash = data.password || 'temporary_password';
+    const hashedPassword = await bcrypt.hash(passwordToHash, salt);
+
     const newUser = await this.prisma.user.create({
       data: {
         email: data.email,
-        password: data.password || 'temporary_password',
-        firstName: data.firstName || 'Anonymous',
-        lastName: data.lastName || 'Anonymous',
+        password: hashedPassword,
+        firstName: data.firstName || '',
+        lastName: data.lastName || '',
       },
     });
 
@@ -80,6 +86,36 @@ export class AuthService implements OnModuleInit {
     const payload = { sub: user.id, email: user.email };
     return {
       access_token: await this.jwtService.signAsync(payload),
+    };
+  }
+
+  // Приклад того, як це має виглядати
+  async validateUser(email: string, pass: string): Promise<any> {
+    // 1. Шукаємо користувача за email
+    console.log('Шукаємо юзера з email:', email);
+    const user = await this.usersService.findOne(email);
+    console.log(user, ` user with email`);
+
+    if (user) {
+      // 2. Порівнюємо паролі (якщо використовуєте bcrypt)
+      const isMatch = await bcrypt.compare(pass, user.password);
+
+      if (isMatch) {
+        const { password, ...result } = user;
+        return result; // Повертаємо юзера без пароля
+      }
+    }
+    return null; // Якщо юзера немає або пароль невірний — повертаємо null
+  }
+
+  async generateJwt(user: any) {
+    const payload = { sub: user.id, email: user.email };
+    return {
+      access_token: await this.jwtService.signAsync(payload),
+      user: {
+        id: user.id,
+        email: user.email,
+      },
     };
   }
 }

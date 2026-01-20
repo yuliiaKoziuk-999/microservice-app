@@ -26,7 +26,7 @@ export class AuthGuard implements CanActivate {
     ]);
     if (isPublic) return true;
     if (!token) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('22');
     }
 
     try {
@@ -35,7 +35,7 @@ export class AuthGuard implements CanActivate {
       });
       request['user'] = payload;
     } catch {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('11');
     }
 
     return true;

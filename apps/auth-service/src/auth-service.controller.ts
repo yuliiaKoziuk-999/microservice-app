@@ -1,18 +1,11 @@
-import {
-  Body,
-  Controller,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Post,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth-service.service';
 import { ApiTags, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 import { RegisterDto } from '@app/common/dto/register.dto';
 import { SignInDto } from './dto/signIn.dto';
-import { AuthGuard } from './guard/auth.guard';
 import { Public } from '@app/common/decorators/public.decorator';
+import { LocalAuthGuard } from './guard/local-auth.guard';
+import { Request } from '@nestjs/common';
 
 @ApiTags('auth')
 @ApiBearerAuth('JWT-auth')
@@ -27,12 +20,12 @@ export class AuthServiceController {
     return this.authService.registerUser(body);
   }
 
-  @HttpCode(HttpStatus.OK)
-  @Post('login')
   @Public()
+  @UseGuards(LocalAuthGuard)
+  @Post('login')
   @ApiBody({ type: SignInDto })
-  signIn(@Body() signInDto: Record<string, any>) {
-    return this.authService.signIn(signInDto.email, signInDto.password);
+  async signIn(@Request() req) {
+    return this.authService.generateJwt(req.user);
   }
 
   @Get('test')

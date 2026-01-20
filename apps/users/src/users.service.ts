@@ -2,6 +2,7 @@ import { UpdateUserDto } from '@app/common/dto/update-user.dto';
 import { Injectable } from '@nestjs/common';
 import { User } from '@prisma/client'; // Prisma згенерувала 'User', а не 'Users'
 import { PrismaService } from 'apps/prisma/prisma.service';
+import { Result } from 'pg';
 
 @Injectable()
 export class UsersService {
@@ -33,9 +34,14 @@ export class UsersService {
     });
   }
 
-  async findOneById(id: string): Promise<User | null> {
-    return await this.prisma.user.findUnique({
+  async findOneById(id: string) {
+    const user = await this.prisma.user.findUnique({
       where: { id },
     });
+
+    if (!user) return null;
+
+    const { password, ...result } = user;
+    return result;
   }
 }
