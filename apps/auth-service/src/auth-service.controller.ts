@@ -1,36 +1,37 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
 import { AuthService } from './auth-service.service';
-import { ApiTags, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  MessagePattern,
+  Payload,
+  Ctx,
+  RmqContext,
+} from '@nestjs/microservices';
 import { RegisterDto } from '@app/common/dto/register.dto';
-import { SignInDto } from './dto/signIn.dto';
-import { Public } from '@app/common/decorators/public.decorator';
-import { LocalAuthGuard } from './guard/local-auth.guard';
-import { Request } from '@nestjs/common';
 
-@ApiTags('auth')
-@ApiBearerAuth('JWT-auth')
-@Controller('auth')
+@Controller()
 export class AuthServiceController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('register')
-  @Public()
-  @ApiBody({ type: RegisterDto })
-  register(@Body() body: RegisterDto) {
-    return this.authService.registerUser(body);
+  @MessagePattern('auth_register')
+  async register(@Payload() data: RegisterDto, @Ctx() context: RmqContext) {
+    const channel = context.getChannelRef();
+    const originalMsg = context.getMessage();
+
+    try {
+      const result = await this.authService.registerUser(data);
+      channel.ack(originalMsg);
+      return result;
+    } catch (err) {
+      channel.nack(originalMsg, false, false);
+      throw err;
+    }
   }
 
-  @Public()
-  @UseGuards(LocalAuthGuard)
-  @Post('login')
-  @ApiBody({ type: SignInDto })
-  async signIn(@Request() req) {
-    return this.authService.generateJwt(req.user);
-  }
-
-  @Get('test')
-  @Public()
-  test() {
-    return `test`;
+  @MessagePattern('auth_login')
+  async signIn(@Payload() data: any, @Ctx() context: RmqContext) {
+    const channel = context.getChannelRef();
+    const result = await this.authService.generateJwt(data);
+    channel.ack(context.getMessage());
+    return result;
   }
 }
