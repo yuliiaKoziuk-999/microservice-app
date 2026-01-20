@@ -1,18 +1,32 @@
+import { NestFactory } from '@nestjs/core';
+import { UsersModule } from './users.module';
+import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { ValidationPipe } from '@nestjs/common';
 import { join } from 'path';
 import * as dotenv from 'dotenv';
 
-// process.cwd() — це корінь всього проекту, де ти запускаєш npm run
-dotenv.config({ path: join(process.cwd(), '.env') });
+dotenv.config({ path: join(process.cwd(), 'apps/users/.env') });
 
-import { NestFactory } from '@nestjs/core';
-import { UsersModule } from './users.module';
-import { ValidationPipe } from '@nestjs/common';
-
+console.log('DATABASE_URL:', process.env.DATABASE_URL);
 async function bootstrap() {
-  const app = await NestFactory.create(UsersModule);
+  const app = await NestFactory.createMicroservice<MicroserviceOptions>(
+    UsersModule,
+    {
+      transport: Transport.RMQ,
+      options: {
+        urls: ['amqp://localhost:5672'],
+        queue: 'users_queue',
+        noAck: false,
+        queueOptions: {
+          durable: false,
+        },
+      },
+    },
+  );
+
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
 
-  const port = process.env.PORT || 3002;
-  await app.listen(port);
+  await app.listen();
+  console.log('Users microservice is listening via RabbitMQ...');
 }
-void bootstrap();
+bootstrap();

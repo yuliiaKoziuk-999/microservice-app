@@ -1,32 +1,40 @@
-import { Body, Controller, Delete, Get, Put, Query } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { Controller } from '@nestjs/common';
+import {
+  Ctx,
+  MessagePattern,
+  Payload,
+  RmqContext,
+} from '@nestjs/microservices';
 import { UsersService } from './users.service';
-import { Public } from '@app/common/decorators/public.decorator';
-import { UpdateUserDto } from '@app/common/dto/update-user.dto';
 
-@ApiTags('users')
-@Controller('users')
+@Controller()
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Get('findAllUsers')
-  findAll() {
-    return this.usersService.findAll();
+  @MessagePattern('findAll')
+  async findAll(@Payload() data: any, @Ctx() context: RmqContext) {
+    const channel = context.getChannelRef();
+    const originalMsg = context.getMessage();
+
+    const users = await this.usersService.findAll();
+    channel.ack(originalMsg);
+    return users;
   }
 
-  @Get('findUser')
-  findOne(@Query('id') id: string) {
-    return this.usersService.findOneById(id);
-  }
+  @MessagePattern('findOneUser')
+  async findOne(@Payload() id: string, @Ctx() context: RmqContext) {
+    const channel = context.getChannelRef();
+    const originalMsg = context.getMessage();
 
-  @Put('updateUser')
-  updateUser(@Query('id') id: string, @Body() updateDto: UpdateUserDto) {
-    return this.usersService.update(id, updateDto);
-  }
+    try {
+      const user = await this.usersService.findOneById(id);
 
-  @Delete('deleteUser')
-  @Public()
-  deleteUser(@Query('id') id: string) {
-    return this.usersService.remove(id);
+      channel.ack(originalMsg);
+
+      return user;
+    } catch (error) {
+      channel.nack(originalMsg, false, false);
+      throw error;
+    }
   }
 }

@@ -1,32 +1,23 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { AuthServiceModule } from 'apps/auth-service/src/auth-service.module';
-import { PrismaService } from 'apps/prisma/prisma.service';
-import { join } from 'path';
-import { ConfigModule } from '@nestjs/config';
-import { AuthGuard } from 'apps/auth-service/src/guard/auth.guard';
-import { APP_GUARD } from '@nestjs/core';
-import { UsersModule } from 'apps/users/src/users.module';
+import { ClientsModule, Transport } from '@nestjs/microservices';
+import { UsersGatewayController } from './controllers/users.controller.ms';
 
 @Module({
   imports: [
-    AuthServiceModule,
-    UsersModule,
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: join(process.cwd(), '.env'),
-    }),
+    ClientsModule.register([
+      {
+        name: 'USERS_SERVICE',
+        transport: Transport.RMQ,
+        options: {
+          urls: ['amqp://localhost:5672'],
+          queue: 'users_queue',
+          queueOptions: {
+            durable: false,
+          },
+        },
+      },
+    ]),
   ],
-  controllers: [AppController],
-  providers: [
-    AppService,
-    PrismaService,
-    {
-      provide: APP_GUARD,
-      useClass: AuthGuard,
-    },
-  ],
-  exports: [PrismaService],
+  controllers: [UsersGatewayController],
 })
 export class AppModule {}

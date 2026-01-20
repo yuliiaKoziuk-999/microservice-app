@@ -89,23 +89,20 @@ export class AuthService implements OnModuleInit {
     };
   }
 
-  // Приклад того, як це має виглядати
   async validateUser(email: string, pass: string): Promise<any> {
-    // 1. Шукаємо користувача за email
     console.log('Шукаємо юзера з email:', email);
     const user = await this.usersService.findOne(email);
     console.log(user, ` user with email`);
 
     if (user) {
-      // 2. Порівнюємо паролі (якщо використовуєте bcrypt)
       const isMatch = await bcrypt.compare(pass, user.password);
 
       if (isMatch) {
         const { password, ...result } = user;
-        return result; // Повертаємо юзера без пароля
+        return result;
       }
     }
-    return null; // Якщо юзера немає або пароль невірний — повертаємо null
+    return null;
   }
 
   async generateJwt(user: any) {
