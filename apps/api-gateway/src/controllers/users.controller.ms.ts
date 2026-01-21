@@ -11,7 +11,7 @@ export class UsersGatewayController {
 
   @Get('findAll')
   findAll() {
-    return this.usersClient.send('findAllUsers', {});
+    return this.usersClient.send('findAll', {});
   }
 
   @Get('findUser')

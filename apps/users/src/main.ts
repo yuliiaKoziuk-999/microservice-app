@@ -7,7 +7,6 @@ import * as dotenv from 'dotenv';
 
 dotenv.config({ path: join(process.cwd(), 'apps/users/.env') });
 
-console.log('DATABASE_URL:', process.env.DATABASE_URL);
 async function bootstrap() {
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
     UsersModule,
