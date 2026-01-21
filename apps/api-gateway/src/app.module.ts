@@ -1,21 +1,35 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { AuthServiceModule } from 'apps/auth-service/src/auth-service.module';
-import { PrismaService } from 'apps/prisma/prisma.service';
-import { join } from 'path';
-import { ConfigModule } from '@nestjs/config';
+import { ClientsModule, Transport } from '@nestjs/microservices';
+import { UsersGatewayController } from './controllers/users.controller.ms';
+import { AuthGatewayController } from './controllers/auth.controller.ms';
 
 @Module({
   imports: [
-    AuthServiceModule,
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: join(process.cwd(), '.env'), // process.cwd() завжди вказує на корінь, де ти запускаєш команду
-    }),
+    ClientsModule.register([
+      {
+        name: 'USERS_SERVICE',
+        transport: Transport.RMQ,
+        options: {
+          urls: ['amqp://localhost:5672'],
+          queue: 'users_queue',
+          queueOptions: {
+            durable: false,
+          },
+        },
+      },
+      {
+        name: 'AUTH_SERVICE',
+        transport: Transport.RMQ,
+        options: {
+          urls: ['amqp://localhost:5672'],
+          queue: 'auth_queue',
+          queueOptions: {
+            durable: false,
+          },
+        },
+      },
+    ]),
   ],
-  controllers: [AppController],
-  providers: [AppService, PrismaService],
-  exports: [PrismaService],
+  controllers: [UsersGatewayController, AuthGatewayController],
 })
 export class AppModule {}

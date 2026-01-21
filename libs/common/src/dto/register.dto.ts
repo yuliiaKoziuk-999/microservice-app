@@ -25,7 +25,13 @@ export class RegisterDto {
     example: 'Іван Петренко',
     description: "Ім'я користувача",
   })
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   @IsString()
-  name: string;
+  firstName: string;
+
+  @ApiProperty({
+    example: 'Петренко',
+    description: 'Прізвище користувача',
+  })
+  @IsString()
+  lastName: string;
 }
